@@ -30,7 +30,7 @@ CMD ["python", "app.py"]
 
 
 #Create a k8s directory to store all Kubernetes manifest files.
-#a. Deployment Manifest (k8s/deployment.yaml)
+#Deployment Manifest (k8s/deployment.yaml)
 
 apiVersion: apps/v1
 kind: Deployment
@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
       - name: wisecow-container
-        image: <your-dockerhub-username>/wisecow:latest
+        image: wisecow
         ports:
         - containerPort: 5000
         env:
@@ -93,10 +93,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - yourdomain.com
+    - wisecow.com
     secretName: wisecow-tls
   rules:
-  - host: yourdomain.com
+  - host: wisecow.com
     http:
       paths:
       - path: /
@@ -116,7 +116,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: your-email@example.com  # Replace with your email
+    gmail: tejagarikapaati@gmail.com  
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
@@ -135,7 +135,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: <your-dockerhub-username>/wisecow
+  IMAGE_NAME: wisecow
 
 jobs:
   build:
@@ -162,7 +162,7 @@ jobs:
         flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Build Docker Image
-      run: docker build -t $IMAGE_NAME:latest .
+      run: docker build -t $IMAGE_NAME:wisecow .
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -171,12 +171,12 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Push Docker Image
-      run: docker push $IMAGE_NAME:latest
+      run: docker push $IMAGE_NAME:wisecow
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
-        version: 'latest'
+        version: 'wisecow'
 
     - name: Configure Kubeconfig
       env:
@@ -206,16 +206,13 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: your-email@example.com  # Replace with your email
+    gmail: tejagarikapaati@gmail.com 
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
     - http01:
         ingress:
           class: nginx
-
-
-
 
 
 
@@ -280,4 +277,23 @@ def check_application_health(url):
 if __name__ == "__main__":
     url_to_check = "http://your_application_url_here"  # Replace with your application URL
     check_application_health(url_to_check)
+
+pip install requests
+python scripts/app_health_checker.py
+
+#Implement Kubernetes liveness and readiness probes in your deployment.yaml to automatically manage pod health.
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
 
